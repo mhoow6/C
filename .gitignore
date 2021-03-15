@@ -1,0 +1,11 @@
+# .vs directory
+.vs/
+
+# Debug directory
+Debug/
+
+# env
+atens-c.sln
+atens-c/atens-c.vcxproj
+atens-c/atens-c.vcxproj.filters
+atens-c/atens-c.vcxproj.user
