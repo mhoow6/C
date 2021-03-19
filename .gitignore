@@ -4,6 +4,9 @@
 # Debug directory
 Debug/
 
+# project directory
+Learning-C/
+
 # env
 *.sln
 *.vcxproj
