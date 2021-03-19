@@ -6,6 +6,6 @@ Debug/
 
 # env
 *.sln
-atens-c/atens-c.vcxproj
-atens-c/atens-c.vcxproj.filters
-atens-c/atens-c.vcxproj.user
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
