@@ -149,7 +149,7 @@ int main() {
 		if (i > 3) {
 			// 공백
 			for (int j = 1; j < i; j++) {
-				printf("O");
+				printf("0");
 			}
 
 			for (int j = i; j <= 5; j++) {
@@ -159,7 +159,7 @@ int main() {
 		else {
 			// 공백
 			for (int j = 5; j > i; j--) {
-				printf("O");
+				printf("0");
 			}
 
 			for (int j = 0; j < (i % 4); j++) {
