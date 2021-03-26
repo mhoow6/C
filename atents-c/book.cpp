@@ -1,135 +1,156 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <conio.h>
 
 typedef struct book {
 	char bookTitle[50];
 	char bookAuthor[20];
 	int bookPrice;
 	int bookSale;
-	char bookCode[9];
+	char bookCode[8];
 }BOOK;
 
-int inBook(BOOK*, int);
+BOOK* inBook(BOOK*, int*);
 void outBook(BOOK*, int);
 void searchBook(BOOK*, int);
 
-int main()
-{
+int main() {
 	int sel, totalBCnt = 0;
-	BOOK myBook[100];
+	BOOK* myBook;
+	myBook = (BOOK*)calloc(2, sizeof(BOOK));
+
 	while (1) {
-		puts("\n원하는 메뉴를 선택하세요");
-		puts("1. 도서 입력");
-		puts("2. 도서 출력");
-		puts("3. 도서 검색");
-		puts("0. 종료 ");
+		puts("\n원하는 메뉴를 선택하세요.");
+		puts("1. 도서입력");
+		puts("2. 도서출력");
+		puts("3. 도서검색");
+		puts("0. 종료");
+		scanf_s("%d%*c", &sel);
 
-		// Enter도 버퍼에 쌓이기 때문에 gets()에서 그대로 넘어가버리는 현상 발생 -> 버퍼에서 Enter 버림
-		// %*c 는 %c를 버린다는 의미
-		scanf_s("%d%*c", &sel); 
-
-		// 입력 버퍼를 비움. 근데 왜 안 먹힐까?
-		// VS 2015부터 fflush의 본래의 목적에 맞게 출력 버퍼를 비우는 용도로만 사용하게끔 바꿈
-		// fflush(stdin)해도 안 먹힘
-		fflush(stdin);
+		//fflush(stdin); // 작동 안 함
 
 		switch (sel) {
-		case 1: 
-			totalBCnt = inBook(myBook, totalBCnt);
-			break;
-		case 2: 
-			outBook(myBook,totalBCnt);
-			break;
-		case 3:
-			searchBook(myBook,totalBCnt);
-			break;
-		case 0:
-			return 0;
-		default:
-			puts("0~3 사이의 메뉴번호를 선택하세요");
+		case 1: myBook = inBook(myBook, &totalBCnt); break;
+		case 2: outBook(myBook, totalBCnt); break;
+		case 3: searchBook(myBook, totalBCnt); break;
+		case 0: return 0;
+		default: puts("0 ~ 3 사이의 메뉴 번호를 선택하세요");
 		}
-
 	}
+
 	return 0;
 }
 
-int inBook(BOOK* mb, int cnt)
-{
-	while (1) {
-		printf("\n책코드 : ");
-		gets_s(mb[cnt].bookCode, sizeof(mb[cnt].bookCode));
+BOOK* inBook(BOOK* mb, int* cn) {
+	char yn = ' ';
+	int cnt;
+	cnt = *cn;
 
-		// 앞의 코드가 연도인지 검증코드
+	do {
+		
+			mb = (BOOK*)realloc(mb, sizeof(BOOK) * (cnt + 2));
+			/*fflush(stdin);*/
+			printf("\n책코드: "); // xxxx-xxx
+			gets_s(mb[cnt].bookCode, sizeof(mb[cnt].bookCode)+1);
 
-		if (strlen(mb[cnt].bookCode) == 8)
-		{
-			int number = strcspn(mb[cnt].bookCode, "0123456789-"); // 이거 왜 안 먹히는지 알아내자
-			printf("%d", number);
-			if (number == 8 && number != 0)
-				break;
-		}
-		printf("\n책코드를 다시 확인하세요 [형식: xxxx-xxx]");
-	}
+			// 책 코드 형식이 올바른지 검사하는 코드
 
-	printf("책제목 : ");
-	gets_s(mb[cnt].bookTitle, sizeof(mb[cnt].bookTitle));
-	printf("저자 : ");
-	gets_s(mb[cnt].bookAuthor, sizeof(mb[cnt].bookAuthor));
-	printf("가격 : ");
-	scanf_s("%d", &mb[cnt].bookPrice);
-	printf("재고수량 : ");
-	scanf_s("%d", &mb[cnt].bookSale);
-	printf("책코드 : ");
-	gets_s(mb[cnt].bookCode, sizeof(mb[cnt].bookCode));
+			printf("책제목: ");
+			gets_s(mb[cnt].bookTitle, sizeof(mb[cnt].bookTitle));
+			printf("저자: ");
+			gets_s(mb[cnt].bookAuthor, sizeof(mb[cnt].bookAuthor));
+			printf("가격: ");
+			scanf_s("%d%*c", &mb[cnt].bookPrice);
+			printf("판매 수량: ");
+			scanf_s("%d*c", &mb[cnt].bookSale);
+			printf("\n 계속 입력하시겠습니까?(Y/N)");
+			yn = _getche(); // 입력 버퍼가 안 지워져 y 입력시 책 코드 입력 스킵 현상 발생
+			rewind(stdin);
+			cnt++;
+		 
+	} while (yn == 'y');
 
-	return ++cnt;
+	*cn = cnt;
+	return mb;
 }
 
-void outBook(BOOK* mb, int cnt)
-{
-	char sKey[20];
+int compare(const void* a, const void* b) {
+	BOOK* ptr_a = (BOOK*)a;
+	BOOK* ptr_b = (BOOK*)b;
+
+	if (ptr_a->bookSale < ptr_b->bookSale) return 1;
+	else if (ptr_a->bookSale == ptr_b->bookSale) return 0;
+	else return -1;
+}
+
+void outBook(BOOK* mb, int cnt) {
+	char skey[20];
 	int i, op;
 	char* year;
 	int check = 0;
+	char bestSeller[3][50];
+	char yn;
+	do {
+		puts("\n\n원하는 메뉴를 선택하세요");
+		puts("1. 전체출력");
+		puts("2. 년도별출력");
+		puts("3. 베스트셀러");
+		scanf_s("%d%*c", &op);
 
-	puts("\n\n원하는 메뉴를 선택하세요");
-	puts("1. 전체출력 ");
-	puts("2. 년도별출력 ");
-	scanf_s("%d%*c", &op);
+		/*fflush(stdin);*/
 
-
-	switch (op) {
-	case 1: for (i = 0; i < cnt; i++) {
-		printf("\n-----------------------------------");
-		printf("\n제목 : %s \n", mb[i].bookTitle);
-		printf("저자 : %s \n", mb[i].bookAuthor);
-		printf("가격 : %d \n", mb[i].bookPrice);
-		printf("수량 : %d \n", mb[i].bookSale);
-	}
-	case 2: for (i = 0; i < cnt; i++)
-	{
-		printf("\n검색할 출판연도를 입력하세요 : ");
-		gets_s(sKey, sizeof(sKey));
-		printf("\n---------------------------------- - ");
-		printf("\n % 10s % 30s\n", "코 드", "제 목");
-		for (i = 0; i < cnt; i++)
-		{
-			char* context = NULL;
-			year = strtok_s(mb[i].bookCode, "-", &context);
-			if (!strcmp(year, sKey))
-			{
-				printf("\n%10s %30s", mb[i].bookCode, mb[i].bookTitle);
-				check++;
+		switch (op) {
+		case 1:
+			for (i = 0; i < cnt; i++) {
+				printf("\n\n---------------------------------- - ");
+				printf("\n코 드 : % s \n", mb[i].bookCode);
+				printf("제 목 : % s \n", mb[i].bookTitle);
+				printf("저 자 : % s \n", mb[i].bookAuthor);
+				printf("가 격 : % d \n", mb[i].bookPrice);
+				printf("판매수량 : % d \n", mb[i].bookSale);
 			}
-		}
-		if (check == 0)
-		{
-			printf("\n일치하는 책이 없습니다. \n");
-		}
-	}
-	}
+			break;
 
-	
+		case 2:
+			for (i = 0; i < cnt; i++)
+			{
+				printf("\n검색할 출판연도를 입력하세요 : ");
+				gets_s(skey, sizeof(skey));
+				printf("\n-----------------------------------");
+				printf("\n %10s %30s\n", "코 드", "제 목");
+				for (i = 0; i < cnt; i++)
+				{
+					char* context = NULL;
+					year = strtok_s(mb[i].bookCode, "-", &context);
+					if (!strcmp(year, skey))
+					{
+						printf("\n%10s %30s", mb[i].bookCode, mb[i].bookTitle);
+						check++;
+					}
+				}
+				if (check == 0)
+				{
+					printf("\n일치하는 책이 없습니다. \n");
+				}
+			}
+			break;
+
+		case 3:
+			qsort(mb, cnt + 1, sizeof(BOOK), compare);
+			printf("\n---------------------------------\n");
+			printf("\n---------BestSeller Top3---------\n");
+			printf("\n---------------------------------\n");
+			for (int i = 0; i < 3; i++) {
+				printf("Top %d: %30s	Sale: %d\n", i+1, mb[i].bookTitle, mb[i].bookPrice);
+			}
+			printf("\n---------------------------------\n");
+			break;
+		}
+		printf("\n 계속 입력하시겠습니까?(Y/N)");
+		yn = _getche();
+		rewind(stdin); // rewind함수는 매개변수로 들어온 스트림을 초기화하는데 사용
+	} while (yn == 'y');
 }
 
 void searchBook(BOOK* mb, int cnt)
@@ -139,8 +160,8 @@ void searchBook(BOOK* mb, int cnt)
 	puts("\n원하는 메뉴를 선택하세요");
 	puts("1. 제목 검색 ");
 	puts("2. 저자 검색 ");
-	scanf_s("%d", &search);
-	fflush(stdin);
+	scanf_s("%d%*c", &search);
+	/*fflush(stdin);*/
 	switch (search) {
 	case 1: printf("\n검색할 제목을 입력하세요: ");
 		gets_s(sTitle, sizeof(sTitle));
@@ -148,24 +169,28 @@ void searchBook(BOOK* mb, int cnt)
 		{
 			if (strstr(mb[i].bookTitle, sTitle) != NULL)
 			{
-				printf("\n\n---------------------------------- - ");
-				printf("\n코 드 : % s \n", mb[i].bookCode);
-				printf("제 목 : % s \n", mb[i].bookTitle);
-				printf("저 자 : % s \n", mb[i].bookAuthor);
-				printf("가 격 : % d \n", mb[i].bookPrice);
-				printf("판매수량 : % d \n", mb[i].bookSale);
+				printf("\n\n-----------------------------------");
+				printf("\n코 드 : %s \n", mb[i].bookCode);
+				printf("제 목 : %s \n", mb[i].bookTitle);
+				printf("저 자 : %s \n", mb[i].bookAuthor);
+				printf("가 격 : %d \n", mb[i].bookPrice);
+				printf("판매수량 : %d \n", mb[i].bookSale);
 				check++;
 			}
 		}
 		if (check)
 		{
-			printf("\n---------------------------------- - ");
-			printf("\\검색 건수 : %d \n", check);
+			printf("\n-----------------------------------");
+			printf("\n검색 건수 : %d \n", check);
 		}
 		else
 		{
-			printf("\n---------------------------------- - ");
+			printf("\n-----------------------------------");
 			printf("\n일치하는 책이 없습니다. \n");
 		}
+
+	case 2:
+		// 저자 검색
+		break;
 	}
 }
